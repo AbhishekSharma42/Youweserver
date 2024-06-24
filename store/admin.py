@@ -54,3 +54,7 @@ class HomePagedata(admin.ModelAdmin):
         image_preview.allow_tags = True
         image_preview.short_description = 'Images'
 
+
+@admin.register(OrderItems)
+class Orders(admin.ModelAdmin):
+    list_display = ['id','userId','productId','OrderId','Quantity']

@@ -8,8 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .serializers import *
 from .models import *
+from decouple import config
 
-
+# ***************************************************************
 # Create your views here.
 # ***************************************************************
 class CategoryViewSet(APIView):
@@ -28,6 +29,7 @@ class CategoryViewSet(APIView):
 # ****************************************************************
 
 
+# ****************************************************************
 # fatch products method 
 # ****************************************************************
 class ProductViewSet(APIView):
@@ -53,6 +55,7 @@ class ProductViewSet(APIView):
 # ****************************************************************      
         
 
+# ****************************************************************      
 # Home page View Handle
 # ****************************************************************
 class Homepage(APIView):
@@ -67,46 +70,112 @@ class Homepage(APIView):
 
 
 # ****************************************************************
-# User Register 
+# User Register [ Login not required ]
 # ****************************************************************
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = UserSerializer
+# ****************************************************************
 
 
 # ****************************************************************
 #User Address show on User Api [ user Login  required ]
 # ****************************************************************
-class userData(generics.ListAPIView):
+class UserData(generics.ListAPIView):
+    
+    # User Authantications By Default
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
+    # User Address get if user [added]
     def get(self, request):
         user = self.request.user;
+
         try:
-            queryset = UserAddress.objects.filter(userId=user)
+            queryset = UserAddress.objects.filter(userId = user)
             userdata = UserAddreSerializer(queryset, many = True)
             return Response(userdata.data)
         except Exception:
-            pass
+            return Response({"server error":"Some error acurde"})
         return Response({"server error":"internal server error"})
+
+
+    # User Address Register if user Not Add own [address]
+    def post(self, request):
+         user = self.request.user
+         data = request.data.copy()
+         data['userId'] = user.id
+
+         serializer = UserAddreSerializer(data = data)
+         if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status = status.HTTP_201_CREATED)
+         else:
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+    # User Address Update by user if User Add own [Address] 
+    def put(self, request):
+        user = self.request.user
+        data = request.data.copy()
+        data['userId'] = user.id
         
+        try:
+            address = UserAddress.objects.get(pk = 1, userId = user)
+        except UserAddress.DoesNotExist:
+            return Response({"error": "Address not found or does not belong to the user"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserAddreSerializer(address, data = data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+# ****************************************************************
+
 
 # ****************************************************************
 # User Cart's Item Show on User API [ user Login  required ]
 # ****************************************************************
-class CartSItems(generics.ListAPIView):
+class CartSItems(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
+    # get to the all cartItems login required
     def get(self, request):
         user = self.request.user;
 
-        queryset = CartITems.objects.filter(userId = user)
+        queryset = CartITems.objects.filter(userId = user).select_related('product_id', 'userId')
         userCartItems = CartITemsSerializer(queryset, many = True);
-        # print(userCartItems.data);
-        return Response(userCartItems.data)
+        return Response(userCartItems.data);
+
+    # Delete cart's item login required
+    def delete(self, request, pk = None):
+        user = request.user
+        try:
+            cart_item = CartITems.objects.get(pk=pk, userId=user)
+            cart_item.delete()
+            return Response({"Success": "Cart item deleted"}, status=status.HTTP_204_NO_CONTENT)
+        except CartITems.DoesNotExist:
+            return Response({"Error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
+
+# ****************************************************************
 
 
-     
+# ****************************************************************
+# User OrderItem Item Show on User API [ user Login  required ]
+# ****************************************************************
+class OrderItem(generics.ListAPIView):
+    permission_classes = [IsAuthenticated];
+    serializer_class = UserSerializer;
+
+    def get(self, request):
+        user = self.request.user;
+        try:
+            queryset = OrderItems.objects.filter(userId = user);
+            userdata = OrderItemsSerializer(queryset, many = True);
+            return Response(userdata.data);
+        except Exception:
+            return Response({"server error":"Some error acurde"});
+        return Response({"server error":"internal server error"});
+# ******************************************************************

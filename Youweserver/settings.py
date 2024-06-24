@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from corsheaders.defaults import default_headers
 from datetime import timedelta
+from decouple import config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -12,16 +13,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x!^kgo4a&sz1j^mlilc_*)v2tqvc&81jr0e8z6m$)f!&ltugd2'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+
+
+# *****************************************
 # Application definition
-
+# *****************************************
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -36,7 +39,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist'
 ]
 
-
+# ************************************************
+# MIDDLEWARE
+# ************************************************
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -50,7 +55,9 @@ MIDDLEWARE = [
 ]
 
 
-
+# *************************************************************
+# Backend Admin Pannel theme control's
+# *************************************************************
 JAZZMIN_SETTINGS = {
      "topmenu_links": [
         # Url that gets reversed (Permissions can be added)
@@ -59,7 +66,7 @@ JAZZMIN_SETTINGS = {
         # external url that opens in a new window (Permissions can be added)
         {"name": "Store", "url": "/admin/store/"},
         {"name": "User", "url": "/admin/auth/user/"},
-        {"name": "Order's", "url": ""},
+        {"name": "Order's", "url": "/admin/store/orderitems/"},
         {"name": "Customize Orders", "url": ""},
         {"name": "Payment's", "url": ""},
     ],
@@ -67,15 +74,18 @@ JAZZMIN_SETTINGS = {
         "changeform_format_overrides": {"auth.user": "carousel", "auth.group": "horizontal_tabs"},
 }
 
-
 JAZZMIN_SETTINGS["show_ui_builder"] = True,
 JAZZMIN_UI_TWEAKS={
     "sidebar_fixed": True,
     }
+# *******************************************************************************
 
 
 
 
+# *******************************************************************************
+# Api Permisions handles
+# *******************************************************************************
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000","http://example.com"]
 
 # Optional: Customize allowed headers, methods, etc.
@@ -84,16 +94,20 @@ CORS_ALLOW_HEADERS = default_headers + (
 )
 
 CORS_ALLOW_METHODS = [
-    'DELETE',
+    "DELETE",
     'GET',
     'OPTIONS',
     'PATCH',
     'POST',
     'PUT',
 ]
+# *******************************************************************************
 
 
 
+# *******************************************************************************
+#  Deshbord Template controler
+# *******************************************************************************
 ROOT_URLCONF = 'Youweserver.urls'
 
 TEMPLATES = [
@@ -113,26 +127,33 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Youweserver.wsgi.application'
+# *******************************************************************************
 
 
-
+# *******************************************************************************
+#  Django Rest Framework settins
+# *******************************************************************************
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
+    # 'DEFAULT_RENDERER_CLASSES': (
+    #     'rest_framework.renderers.JSONRenderer',
+    # ),
 
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.JSONParser',
-    ),
+    # 'DEFAULT_PARSER_CLASSES': (
+    #     'rest_framework.parsers.JSONParser',
+    # ),
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+# ******************************************************************************
 
 
+# ******************************************************************************
+#  Jwt token hendel here
+# ******************************************************************************
 SIMPLE_JWT = {
-     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
      'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
      'ROTATE_REFRESH_TOKENS': True,
      'BLACKLIST_AFTER_ROTATION': True

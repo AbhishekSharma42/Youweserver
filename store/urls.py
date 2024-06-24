@@ -24,10 +24,14 @@ urlpatterns = [
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
 
     #Get user Data After login
-    path('userData/', userData.as_view(), name = "userData"),
+    path('userData/', UserData.as_view(), name = "userData"),
 
     # Get User Cart Item's After User Login
-    path('usercart/',CartSItems.as_view(), name = "userCart")
+    path('usercart/',CartSItems.as_view(), name = "userCart"),
+    path('usercart/<int:pk>',CartSItems.as_view(), name = "userCart-delete"),
+
+    # User item's Order After user Login
+    path('order/',OrderItem.as_view(), name = "Order-items"),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
